@@ -8,6 +8,9 @@ import com.theokanning.openai.DeleteResult;
 import com.theokanning.openai.OpenAiApi;
 import com.theokanning.openai.OpenAiError;
 import com.theokanning.openai.OpenAiHttpException;
+import com.theokanning.openai.audio.AudioResult;
+import com.theokanning.openai.audio.CreateTranscriptionRequest;
+import com.theokanning.openai.audio.CreateTranslationRequest;
 import com.theokanning.openai.completion.CompletionChunk;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.completion.CompletionResult;
@@ -29,14 +32,13 @@ import com.theokanning.openai.image.ImageResult;
 import com.theokanning.openai.model.Model;
 import com.theokanning.openai.moderation.ModerationRequest;
 import com.theokanning.openai.moderation.ModerationResult;
-
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import okhttp3.*;
+import retrofit2.Call;
 import retrofit2.HttpException;
 import retrofit2.Retrofit;
-import retrofit2.Call;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
@@ -252,6 +254,39 @@ public class OpenAiService {
         return execute(api.createModeration(request));
     }
 
+    public AudioResult createTranscription(CreateTranscriptionRequest request, String audioPath) {
+        java.io.File audio = new java.io.File(audioPath);
+        String extension = getFileExtension(audio);
+        String mediaTypeAudio = fetchMediaTypeAudio(extension);
+
+        RequestBody fileBody = RequestBody.create(MediaType.parse(mediaTypeAudio), audio);
+
+        MultipartBody.Builder builder = new MultipartBody.Builder()
+                .setType(MediaType.get("multipart/form-data"))
+                .addFormDataPart("model", request.getModel())
+                .addFormDataPart("response_format", request.getResponseFormat())
+                .addFormDataPart("file", audio.getName(),fileBody);
+
+        return execute(api.createTranscription(builder.build()));
+    }
+
+    public AudioResult createTranslation(CreateTranslationRequest request, String audioPath) {
+        java.io.File audio = new java.io.File(audioPath);
+        String extension = getFileExtension(audio);
+        String mediaTypeAudio = fetchMediaTypeAudio(extension);
+
+        RequestBody fileBody = RequestBody.create(MediaType.parse(mediaTypeAudio), audio);
+        MultipartBody.Part audioBody = MultipartBody.Part.createFormData("file", audio.getName(), fileBody);
+
+        MultipartBody.Builder builder = new MultipartBody.Builder()
+                .setType(MediaType.get("multipart/form-data"))
+                .addFormDataPart("model", request.getModel())
+                .addFormDataPart("response_format", request.getResponseFormat())
+                .addPart(audioBody);
+
+        return execute(api.createTranslation(builder.build()));
+    }
+
     /**
      * Calls the Open AI api, returns the response, and parses error messages if the request fails
      */
@@ -348,4 +383,41 @@ public class OpenAiService {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
     }
+
+    private String getFileExtension(java.io.File file) {
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
+    }
+
+    private String fetchMediaTypeAudio(String extension) {
+        String mediaType = "";
+        switch (extension.toLowerCase()) {
+            case "mp3":
+                mediaType = "audio/mp3";
+                break;
+            case "m4a":
+                mediaType = "audio/m4a";
+                break;
+            case "webm":
+                mediaType = "audio/webm";
+                break;
+            case "mp4":
+                mediaType = "video/mp4";
+                break;
+            case "mpga":
+                mediaType = "audio/mpeg";
+                break;
+            case "wav":
+                mediaType = "audio/wav";
+                break;
+            case "mpeg":
+                mediaType = "video/mpeg";
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid file format. Supported formats: ['m4a', 'mp3', 'webm', 'mp4', 'mpga', 'wav', 'mpeg']");
+        }
+        return mediaType;
+    }
+
 }

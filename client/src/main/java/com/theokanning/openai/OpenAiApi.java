@@ -1,5 +1,6 @@
 package com.theokanning.openai;
 
+import com.theokanning.openai.audio.AudioResult;
 import com.theokanning.openai.completion.CompletionRequest;
 import com.theokanning.openai.completion.CompletionResult;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
@@ -21,6 +22,7 @@ import com.theokanning.openai.moderation.ModerationRequest;
 import com.theokanning.openai.moderation.ModerationResult;
 import io.reactivex.Single;
 import okhttp3.MultipartBody;
+import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -119,4 +121,10 @@ public interface OpenAiApi {
     @Deprecated
     @GET("/v1/engines/{engine_id}")
     Single<Engine> getEngine(@Path("engine_id") String engineId);
+
+    @POST("/v1/audio/transcriptions")
+    Single<AudioResult> createTranscription(@Body RequestBody requestBody);
+
+    @POST("/v1/audio/translations")
+    Single<AudioResult> createTranslation(@Body RequestBody requestBody);
 }

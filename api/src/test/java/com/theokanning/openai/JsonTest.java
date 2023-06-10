@@ -2,6 +2,9 @@ package com.theokanning.openai;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.*;
+import com.theokanning.openai.audio.AudioResult;
+import com.theokanning.openai.audio.CreateTranscriptionRequest;
+import com.theokanning.openai.audio.CreateTranslationRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
 import com.theokanning.openai.edit.EditRequest;
@@ -44,7 +47,10 @@ public class JsonTest {
             ImageResult.class,
             Model.class,
             ModerationRequest.class,
-            ModerationResult.class
+            ModerationResult.class,
+            CreateTranslationRequest.class,
+            CreateTranscriptionRequest.class,
+            AudioResult.class
     })
     void objectMatchesJson(Class<?> clazz) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
